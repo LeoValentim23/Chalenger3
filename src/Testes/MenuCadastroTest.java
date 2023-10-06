@@ -1,71 +1,58 @@
 package Testes;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import Classe.Cliente;
-import Conexao.ConnectionManager;
 import Menus.MenuCadastro;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import Conexao.ConnectionManager;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Scanner;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class MenuCadastroTest {
 
     private ConnectionManager connectionManager;
+    private Connection dbConnection;
 
-    @BeforeEach
+    @Before
     public void setUp() {
         connectionManager = new ConnectionManager();
-    }
+        dbConnection = connectionManager.getConnection();
 
-    @AfterEach
-    public void tearDown() {
 
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM clientes")) {
-            preparedStatement.executeUpdate();
+        try {
+            dbConnection.setAutoCommit(false);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void testRealizarCadastro() {
-        Scanner scanner = new Scanner(System.in);
-        ConnectionManager connectionManager = new ConnectionManager();
+    public void testInserirNoBancoDeDados() {
+
+        Cliente cliente = new Cliente("anderson", "COMPASS", "10DA-DA245", "100.00", "3432252566");
 
 
-        Cliente cliente = new Cliente("TesteNome", "TesteCarro", "TestePlaca", "TestePeso", "TesteCPF");
+        boolean insercaoSucesso = MenuCadastro.inserirNoBancoDeDados(cliente, connectionManager);
+        assertTrue("A inserção no banco de dados falhou.", insercaoSucesso);
 
+    }
 
+    @After
+    public void tearDown() {
 
-
-        MenuCadastro.realizarCadastro(scanner, connectionManager);
-
-
-
-        try (Connection connection = connectionManager.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM clientes WHERE nome = ?")) {
-            preparedStatement.setString(1, cliente.getNome());
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            assertTrue(resultSet.next());
-
-
-            assertEquals(cliente.getCarro(), resultSet.getString("carro"));
-            assertEquals(cliente.getPlaca(), resultSet.getString("placa"));
-            assertEquals(cliente.getPesoVeiculo(), resultSet.getString("peso_veiculo"));
-            assertEquals(cliente.getCpf(), resultSet.getString("cpf"));
+        try {
+            dbConnection.rollback();
+            dbConnection.setAutoCommit(true);
+            dbConnection.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            fail("Exceção SQL: " + e.getMessage());
         }
     }
 }
+

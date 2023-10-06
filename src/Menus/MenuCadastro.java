@@ -36,7 +36,7 @@ public class MenuCadastro {
         }
     }
 
-    private static boolean inserirNoBancoDeDados(Cliente cliente, ConnectionManager connectionManager) {
+    public static boolean inserirNoBancoDeDados(Cliente cliente, ConnectionManager connectionManager) {
         try (Connection dbConnection = connectionManager.getConnection()) {
             String query = "INSERT INTO clientes (nome, carro, placa, peso_veiculo, cpf) VALUES (?, ?, ?, ?, ?)";
 
